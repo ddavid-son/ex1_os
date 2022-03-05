@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "string": "c",
+        "*.tcc": "c",
+        "istream": "c",
+        "streambuf": "c",
+        "stdlib.h": "c",
+        "stdio.h": "c"
+    }
+}
