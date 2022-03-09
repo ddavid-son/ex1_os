@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "string.h"
 #include "stdbool.h"
+#include <unistd.h>
 
 typedef struct student
 {
@@ -12,21 +13,46 @@ typedef struct student
 
 student *students;
 int numOfStudents = 0;
+int arraySize = 16;
+
+void sortGrades();
+int compare(const void *a, const void *b);
+void writeToFile();
+void readAllDataFromFiles(int numOfFiles, char *argv[]);
+void addLineToStudent(char *studentData);
+void resize();
+void createAndAddStudent(char *name);
+bool findIfStudentExists(char* name);
+void report_input_file(const char *file_name, int num_stud);
+void report_data_summary(int num_stud, double avg);
+void printAllStudents();
 
 int main(int argc, char *argv[])
 {
-
+    char* names[] = {"g","first.txt" , "second.txt" , "third.txt" , "forth.txt" };
     // init students array
     students = (student *)malloc(sizeof(student) * 16); // todo: add dynamic allocation
 
     // read and handle input
-    readAllDataFromFiles(argc, argv);
+    readAllDataFromFiles(4/*argc*/, names/*argv*/);
     sortGrades();
+    printAllStudents();
 
     // write student array to file merged.txt
     writeToFile();
 
     return 0;
+}
+
+void printAllStudents(){
+    for (int i = 0 ; i < numOfStudents ; i++){
+        printf("%s ", students[i].name);
+        for (int j = 0; j < students[i].numOfGrades; j++)
+        {
+            printf("%d ", students[i].grades[j]);
+        }
+        printf("\n");
+    }
 }
 
 void sortGrades()
@@ -60,12 +86,14 @@ void writeToFile()
 
 void readAllDataFromFiles(int numOfFiles, char *argv[])
 {
-    // read all file names form argv
-    char *fileName = malloc(sizeof(char) * numOfFiles);
-    for (int i = 1; i < numOfFiles; i++)
+    char **fileName = (char **)malloc(sizeof(char *) * numOfFiles);
+
+
+    for (int i = 1; i <= numOfFiles; i++)
     {
+        fileName[i-1] = (char *)malloc(sizeof(char) * (strlen(argv[i]) + 1));
         strcpy(fileName[i - 1], argv[i]);
-        printf("%s\n", fileName); // for denugging
+        printf("%s\n", fileName[i-1]); // for debugging
     }
 
     // read all lines form files
@@ -96,9 +124,10 @@ void readAllDataFromFiles(int numOfFiles, char *argv[])
 void addLineToStudent(char *studentData)
 {
     char *name = strtok(studentData, " ");
-
+    int x;
     if (!findIfStudentExists(name))
     {
+        //resize();
         createAndAddStudent(name);
     }
 
@@ -107,7 +136,7 @@ void addLineToStudent(char *studentData)
         if (strcmp(students[i].name, name) == 0)
         {
             char *grades = strtok(NULL, " ");
-            while (grades != NULL)
+            while (grades != NULL && (*grades) != '\n')
             {
                 students[i].grades[students[i].numOfGrades] = atoi(grades);
                 grades = strtok(NULL, " ");
@@ -119,15 +148,25 @@ void addLineToStudent(char *studentData)
     }
 }
 
+void resize(){
+    if (numOfStudents == arraySize-1)
+    {
+        arraySize *= 2;
+        students = (student *)realloc(students, sizeof(student) * arraySize);
+    }
+}
+
 void createAndAddStudent(char *name)
 {
+    resize();
     student *student = malloc(sizeof(student));
     strcpy(student->name, name);
     student->numOfGrades = 0;
+    students[numOfStudents] = *student;
     numOfStudents++;
 }
 
-bool findIfStudentExists(name)
+bool findIfStudentExists(char* name)
 {
     for (int i = 0; i < numOfStudents; i++)
     {
@@ -139,17 +178,16 @@ bool findIfStudentExists(name)
     return false;
 }
 
-// ---------------------------------------------- tzvi report format ----------------------------------------------------- //
+// ---------------------------------------------- Tzvi report format ----------------------------------------------------- //
 void report_input_file(const char *file_name, int num_stud)
 {
     fprintf(stderr, "process: %d file: %s number of students: %d\n",
             getpid(), file_name, num_stud);
 }
-
 void report_data_summary(int num_stud, double avg)
 {
     fprintf(stderr, "process: %d data summary - number of students:"
                     " %d grade average: %.2f\n",
             getpid(), num_stud, avg);
 }
-// ---------------------------------------------- tzvi report format ----------------------------------------------------- //
+// ---------------------------------------------- Tzvi report format ----------------------------------------------------- //
