@@ -3,6 +3,7 @@
 #include "string.h"
 #include "stdbool.h"
 #include <unistd.h>
+//#include <sys/types.h>
 
 typedef struct student
 {
@@ -27,6 +28,7 @@ void report_input_file(const char *file_name, int num_stud);
 void report_data_summary(int num_stud, double avg);
 void printAllStudents();
 double getAvg();
+int readFile(char* name);
 
 int main(int argc, char *argv[])
 {
@@ -35,7 +37,7 @@ int main(int argc, char *argv[])
 
     // read and handle input
     readAllDataFromFiles(argc, argv);
-
+    readFile("merged.txt");
     sortGrades();
     report_data_summary(numOfStudents,getAvg());
 
@@ -90,32 +92,43 @@ void writeToFile()
 
 void readAllDataFromFiles(int numOfFiles, char *argv[])
 {
-    int numOfStudnetInfile=0;
+    //int numOfStudnetInfile=0;
     for (int i = 1; i < numOfFiles; i++)
     {
-        FILE *fp = fopen(argv[i], "r");
-        if (fp == NULL) 
-        {
-            printf("Error Reading File\n");
-            exit(1);
-        }
-        char *line = malloc(sizeof(char) * 81);
-        while (fgets(line, 81, fp) != NULL)
-        {
-            if (line[0] == '\n')
-            {
-                continue;
-            }
-            else
-            {
-                numOfStudnetInfile++;
-                addLineToStudent(line);
-            }
-        }
-        fclose(fp);
-        report_input_file(argv[i], numOfStudnetInfile);
-        numOfStudnetInfile = 0;
+        if(0 == fork()) {
+            if(i!=1) {
+                readFile("merged.txt");
+            }   
+           //numOfStudnetInfile = readFile(argv[i]);
+           report_input_file(argv[i], readFile(argv[i]));
+           writeToFile();
+           //numOfStudnetInfile = 0;
+           exit(-1);
+        } else {
+            wait();
+        }  
     }
+}
+
+int readFile(char* name){
+    int numOfStudnetInfile=0;
+     FILE *fp = fopen(name, "r");
+    if (fp == NULL) {
+        printf("Error Reading File\n");
+        exit(1);
+    }
+    char *line = malloc(sizeof(char) * 81);
+    while (fgets(line, 81, fp) != NULL) {
+        if (line[0] == '\n') {
+            continue;
+        }
+        else{
+            numOfStudnetInfile++;
+            addLineToStudent(line);
+        }
+    }
+    fclose(fp);
+    return numOfStudnetInfile;
 }
 
 void addLineToStudent(char *studentData)
@@ -153,7 +166,6 @@ void resize(){
 
 void createAndAddStudent(char *name)
 {
-    //resize();
     student *student = malloc(sizeof(student));
     strcpy(student->name, name);
     student->numOfGrades = 0;
