@@ -26,6 +26,7 @@ bool findIfStudentExists(char* name);
 void report_input_file(const char *file_name, int num_stud);
 void report_data_summary(int num_stud, double avg);
 void printAllStudents();
+double getAvg();
 
 int main(int argc, char *argv[])
 {
@@ -37,11 +38,27 @@ int main(int argc, char *argv[])
     readAllDataFromFiles(4/*argc*/, names/*argv*/);
     sortGrades();
     printAllStudents();
+    
+    report_data_summary(numOfStudents,getAvg());
 
     // write student array to file merged.txt
     writeToFile();
 
     return 0;
+}
+
+double getAvg(){
+    int sum = 0;
+    int numOfGrades = 0;
+    for (int i = 0; i < numOfStudents; i++)
+    {
+        for (int j = 0; j < students[i].numOfGrades ; i++)
+        {
+            sum+= students[i].grades[j];
+            numOfGrades++;
+        }
+    }
+    return (double)sum / numOfGrades;    
 }
 
 void printAllStudents(){
@@ -86,21 +103,11 @@ void writeToFile()
 
 void readAllDataFromFiles(int numOfFiles, char *argv[])
 {
-    char **fileName = (char **)malloc(sizeof(char *) * numOfFiles);
-
-
+    int numOfStudnetInfile=0;
     for (int i = 1; i <= numOfFiles; i++)
     {
-        fileName[i-1] = (char *)malloc(sizeof(char) * (strlen(argv[i]) + 1));
-        strcpy(fileName[i - 1], argv[i]);
-        printf("%s\n", fileName[i-1]); // for debugging
-    }
-
-    // read all lines form files
-    for (int i = 0; i < numOfFiles; i++)
-    {
-        FILE *fp = fopen(fileName[i], "r");
-        if (fp == NULL)
+        FILE *fp = fopen(argv[i], "r");
+        if (fp == NULL) 
         {
             printf("Error Reading File\n");
             exit(1);
@@ -114,10 +121,13 @@ void readAllDataFromFiles(int numOfFiles, char *argv[])
             }
             else
             {
+                numOfStudnetInfile++;
                 addLineToStudent(line);
             }
         }
         fclose(fp);
+        report_input_file(argv[i], numOfStudnetInfile);
+        numOfStudnetInfile = 0;
     }
 }
 
