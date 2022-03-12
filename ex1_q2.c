@@ -9,63 +9,57 @@ typedef struct student
 {
     char name[11];
     int grades[10];
-    int numOfGrades;
+    int grades_num;
 } student;
 
 student *students;
-int numOfStudents = 0;
-int arraySize = 16;
+int studs_num = 0;
 
-void sortGrades();
+void sort_grades();
 int compare(const void *a, const void *b);
-void writeToFile();
-void readAllDataFromFiles(int numOfFiles, char *argv[]);
-void addLineToStudent(char *studentData);
+void write_to_file();
+void get_stud_data(int numOfFiles, char *argv[]);
+void add_grades(char *studentData);
 void resize();
-void createAndAddStudent(char *name);
-bool findIfStudentExists(char* name);
+void create_new_stud(char *name);
+bool stud_exists(char* name);
 void report_input_file(const char *file_name, int num_stud);
 void report_data_summary(int num_stud, double avg);
-void printAllStudents();
-double getAvg();
+double calc_avg();
 int readFile(char* name);
 
 int main(int argc, char *argv[])
 {
-    // init students array
-    students = (student *)malloc(sizeof(student) * 100); // todo: add dynamic allocation
+    students = (student *)malloc(sizeof(student) * 100); 
+    get_stud_data(argc, argv);
 
-    // read and handle input
-    readAllDataFromFiles(argc, argv);
     readFile("merged.txt");
-    sortGrades();
-    report_data_summary(numOfStudents,getAvg());
+    sort_grades();
 
-    // write student array to file merged.txt
-    writeToFile();
-
+    report_data_summary(studs_num,calc_avg());
+    write_to_file();
     return 0;
 }
 
-double getAvg(){
+double calc_avg(){
     int sum = 0;
-    int numOfGrades = 0;
-    for (int i = 0; i < numOfStudents; i++)
+    int grades_num = 0;
+    for (int i = 0; i < studs_num; i++)
     {
-        for (int j = 0; j < students[i].numOfGrades ; i++)
+        for (int j = 0; j < students[i].grades_num ; j++)
         {
             sum+= students[i].grades[j];
-            numOfGrades++;
+            grades_num++;
         }
     }
-    return (double)sum / numOfGrades;    
+    return (double)sum / grades_num;    
 }
 
-void sortGrades()
+void sort_grades()
 {
-    for (int i = 0; i < numOfStudents; i++)
+    for (int i = 0; i < studs_num; i++)
     {
-        qsort(students[i].grades, students[i].numOfGrades, sizeof(int), compare);
+        qsort(students[i].grades, students[i].grades_num, sizeof(int), compare);
     }
 }
 
@@ -74,35 +68,33 @@ int compare(const void *a, const void *b)
     return *(int *)a - *(int *)b;
 }
 
-void writeToFile()
+void write_to_file()
 {
     FILE *fp;
     fp = fopen("merged.txt", "w");
-    for (int i = 0; i < numOfStudents; i++)
+    for (int i = 0; i < studs_num; i++)
     {
         fprintf(fp, "%s ", students[i].name);
-        for (int j = 0; j < students[i].numOfGrades; j++)
+        for (int j = 0; j < students[i].grades_num; j++)
         {
             fprintf(fp, "%d ", students[i].grades[j]);
         }
         fprintf(fp, "\n");
     }
     fclose(fp);
+    free(students);
 }
 
-void readAllDataFromFiles(int numOfFiles, char *argv[])
+void get_stud_data(int numOfFiles, char *argv[])
 {
-    //int numOfStudnetInfile=0;
     for (int i = 1; i < numOfFiles; i++)
     {
         if(0 == fork()) {
             if(i!=1) {
                 readFile("merged.txt");
             }   
-           //numOfStudnetInfile = readFile(argv[i]);
            report_input_file(argv[i], readFile(argv[i]));
-           writeToFile();
-           //numOfStudnetInfile = 0;
+           write_to_file();
            exit(-1);
         } else {
             wait();
@@ -111,7 +103,7 @@ void readAllDataFromFiles(int numOfFiles, char *argv[])
 }
 
 int readFile(char* name){
-    int numOfStudnetInfile=0;
+    int stud_in_file=0;
      FILE *fp = fopen(name, "r");
     if (fp == NULL) {
         printf("Error Reading File\n");
@@ -123,32 +115,33 @@ int readFile(char* name){
             continue;
         }
         else{
-            numOfStudnetInfile++;
-            addLineToStudent(line);
+            stud_in_file++;
+            add_grades(line);
         }
     }
     fclose(fp);
-    return numOfStudnetInfile;
+    free(line);
+    return stud_in_file;
 }
 
-void addLineToStudent(char *studentData)
+void add_grades(char *studentData)
 {
     char *name = strtok(studentData, " ");
-    if (!findIfStudentExists(name))
+    if (!stud_exists(name))
     {
-        createAndAddStudent(name);
+        create_new_stud(name);
     }
 
-    for (int i = 0; i < numOfStudents; i++)
+    for (int i = 0; i < studs_num; i++)
     {
         if (strcmp(students[i].name, name) == 0)
         {
             char *grades = strtok(NULL, " ");
             while (grades != NULL && (*grades) != '\n' && (*grades) != '\r')
             {
-                students[i].grades[students[i].numOfGrades] = atoi(grades);
+                students[i].grades[students[i].grades_num] = atoi(grades);
                 grades = strtok(NULL, " ");
-                students[i].numOfGrades++;
+                students[i].grades_num++;
             }
 
             return;
@@ -156,26 +149,17 @@ void addLineToStudent(char *studentData)
     }
 }
 
-void resize(){
-    if (numOfStudents == arraySize-1)
-    {
-        arraySize *= 2;
-        students = (student *)realloc(students, sizeof(student) * arraySize);
-    }
+void create_new_stud(char *name)
+{
+    student stud;
+    strcpy(stud.name, name);
+    stud.grades_num = 0;
+    students[studs_num++] = stud;
 }
 
-void createAndAddStudent(char *name)
+bool stud_exists(char* name)
 {
-    student *student = malloc(sizeof(student));
-    strcpy(student->name, name);
-    student->numOfGrades = 0;
-    students[numOfStudents] = *student;
-    numOfStudents++;
-}
-
-bool findIfStudentExists(char* name)
-{
-    for (int i = 0; i < numOfStudents; i++)
+    for (int i = 0; i < studs_num; i++)
     {
         if (strcmp(students[i].name, name) == 0)
         {
