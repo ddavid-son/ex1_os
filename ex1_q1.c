@@ -20,9 +20,9 @@ void   sort_grades();
 void   write_to_file();
 bool   stud_exists(char* name);
 void   create_new_stud(char *name);
-void   add_grades(char *studentData);
+void   add_grades(char *stud_data);
 int    compare(const void *a, const void *b);
-void   get_stud_data(int numOfFiles, char *argv[]);
+void   get_stud_data(int files_num, char *argv[]);
 void   report_data_summary(int num_stud, double avg);
 void   report_input_file(const char *file_name, int num_stud);
 

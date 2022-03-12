@@ -15,18 +15,17 @@ typedef struct student
 student *students;
 int studs_num = 0;
 
-void sort_grades();
-int compare(const void *a, const void *b);
-void write_to_file();
-void get_stud_data(int numOfFiles, char *argv[]);
-void add_grades(char *studentData);
-void resize();
-void create_new_stud(char *name);
-bool stud_exists(char* name);
-void report_input_file(const char *file_name, int num_stud);
-void report_data_summary(int num_stud, double avg);
 double calc_avg();
-int readFile(char* name);
+void   sort_grades();
+void   write_to_file();
+int    readFile(char* name);
+bool   stud_exists(char* name);
+void   create_new_stud(char *name);
+void   add_grades(char *stud_data);
+int    compare(const void *a, const void *b);
+void   get_stud_data(int files_num, char *argv[]);
+void   report_data_summary(int num_stud, double avg);
+void   report_input_file(const char *file_name, int num_stud);
 
 int main(int argc, char *argv[])
 {
@@ -104,12 +103,12 @@ void get_stud_data(int numOfFiles, char *argv[])
 
 int readFile(char* name){
     int stud_in_file=0;
-     FILE *fp = fopen(name, "r");
+    FILE *fp = fopen(name, "r");
+    char *line = malloc(sizeof(char) * 81);
     if (fp == NULL) {
         printf("Error Reading File\n");
         exit(1);
     }
-    char *line = malloc(sizeof(char) * 81);
     while (fgets(line, 81, fp) != NULL) {
         if (line[0] == '\n') {
             continue;
@@ -126,6 +125,7 @@ int readFile(char* name){
 
 void add_grades(char *studentData)
 {
+    char *grades;
     char *name = strtok(studentData, " ");
     if (!stud_exists(name))
     {
@@ -136,7 +136,7 @@ void add_grades(char *studentData)
     {
         if (strcmp(students[i].name, name) == 0)
         {
-            char *grades = strtok(NULL, " ");
+            grades = strtok(NULL, " ");
             while (grades != NULL && (*grades) != '\n' && (*grades) != '\r')
             {
                 students[i].grades[students[i].grades_num] = atoi(grades);
